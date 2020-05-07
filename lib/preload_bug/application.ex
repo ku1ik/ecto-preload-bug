@@ -7,8 +7,7 @@ defmodule PreloadBug.Application do
 
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: PreloadBug.Worker.start_link(arg)
-      # {PreloadBug.Worker, arg}
+      PreloadBug.Repo
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
