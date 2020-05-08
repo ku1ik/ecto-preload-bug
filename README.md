@@ -10,3 +10,4 @@ In iex run following commands:
 5. `:observer.start`, switch to "Load Charts" tab
 6. `PreloadBug.once` - this preloads once, no memory spike should be observed
 7. `PreloadBug.twice` - this runs the same preload on alrady preload schema - observe huge memory spike, ~1 GB in this example project. In the project I discovered it we see 3-5 GB spike.
+8. `PreloadBug.twice_not_in_parallel` - same as above but explicitly disable parallel loading - no memory spike!

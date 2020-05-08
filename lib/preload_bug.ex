@@ -37,6 +37,14 @@ defmodule PreloadBug do
     :ok
   end
 
+  def twice_not_in_parallel do
+    cleanup()
+    invoice = setup()
+    Repo.preload(Repo.preload(invoice, @preloads), @preloads, in_parallel: false)
+
+    :ok
+  end
+
   defp setup do
     vendor = Repo.insert!(%Vendor{name: "test", company_id: 1})
     invoice = Repo.insert!(%Invoice{number: "test", vendor_id: vendor.id})
