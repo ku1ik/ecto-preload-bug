@@ -1,9 +1,23 @@
 defmodule PreloadBug do
-  alias PreloadBug.{Repo, Invoice, Attachment, Page}
+  alias PreloadBug.{Repo, Invoice, Attachment, Page, Vendor}
+
+  ## this is OK
+
+  # @preloads [
+  #   [pages: [attachment: :pages]]
+  # ]
+
+  ## this is also OK
+
+  # @preloads [
+  #   :vendor,
+  #   [pages: :attachment]
+  # ]
+
+  ## this causes huge mem usage spike (couple gigabytes!)
 
   @preloads [
-    # [attachments: :pages],
-    # :pages,
+    :vendor,
     [pages: [attachment: :pages]]
   ]
 
@@ -24,7 +38,8 @@ defmodule PreloadBug do
   end
 
   defp setup do
-    invoice = Repo.insert!(%Invoice{number: "test"})
+    vendor = Repo.insert!(%Vendor{name: "test", company_id: 1})
+    invoice = Repo.insert!(%Invoice{number: "test", vendor_id: vendor.id})
     attachment = Repo.insert!(%Attachment{filename: "test.pdf"})
 
     for n <- 1..100 do

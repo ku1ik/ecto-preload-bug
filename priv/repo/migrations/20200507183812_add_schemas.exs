@@ -2,8 +2,15 @@ defmodule PreloadBug.Repo.Migrations.AddSchemas do
   use Ecto.Migration
 
   def change do
+    create table(:vendors) do
+      add :name, :string
+      add :company_id, :integer
+      timestamps()
+    end
+
     create table(:invoices) do
       add :number, :string
+      add :vendor_id, references(:vendors)
       timestamps()
     end
 
