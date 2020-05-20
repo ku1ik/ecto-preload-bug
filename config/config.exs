@@ -8,3 +8,9 @@ config :preload_bug, PreloadBug.Repo,
   password: "postgres",
   hostname: "localhost",
   port: "5432"
+
+config :logger, level: :info
+
+config :logger, :console,
+  format: "$time $metadata[$level] $levelpad$message\n",
+  metadata: [:user_id]

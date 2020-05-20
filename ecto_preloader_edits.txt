@@ -1,0 +1,83 @@
+ ## Preloading
+
+  defp preload_each(structs, _repo_name, [], _opts), do: structs
+  defp preload_each([], _repo_name, _preloads, _opts), do: []
+
+  defp preload_each(structs, repo_name, preloads, opts) do
+    if sample = Enum.find(structs, & &1) do
+      module = sample.__struct__
+      prefix = preload_prefix(opts, sample)
+      {assocs, throughs} = expand(module, preloads, {%{}, %{}})
+
+      assocs =
+        maybe_pmap(Map.values(assocs), repo_name, opts, fn
+          {{:assoc, assoc, related_key}, take, query, sub_preloads}, opts ->
+            res =
+              preload_assoc(
+                structs,
+                module,
+                repo_name,
+                prefix,
+                assoc,
+                related_key,
+                query,
+                sub_preloads,
+                take,
+                opts
+              )
+
+            Logger.info("returning preload assoc")
+            res
+        end)
+
+      throughs = Map.values(throughs)
+
+      for struct <- structs do
+        struct = Enum.reduce(assocs, struct, &load_assoc/2)
+        struct = Enum.reduce(throughs, struct, &load_through/2)
+        struct
+      end
+    else
+      structs
+    end
+  end
+
+  defp preload_prefix(opts, sample) do
+    case Keyword.fetch(opts, :prefix) do
+      {:ok, prefix} ->
+        prefix
+
+      :error ->
+        %{__meta__: %{prefix: prefix}} = sample
+        prefix
+    end
+  end
+
+  ## Association preloading
+
+  defp maybe_pmap(assocs, repo_name, opts, fun) do
+    if match?([_, _ | _], assocs) and not Ecto.Repo.Transaction.in_transaction?(repo_name) and
+         Keyword.get(opts, :in_parallel, true) do
+      # We pass caller: self() so pools like the ownership
+      # pool knows where to fetch the connection from and
+      # set the proper timeouts.
+      # TODO: Remove this when we require Elixir v1.8+
+      opts = Keyword.put_new(opts, :caller, self())
+
+      Logger.info("running async with #{Enum.count(assocs)} assocs")
+
+      res =
+        assocs
+        |> Task.async_stream(&fun.(&1, opts), timeout: :infinity)
+
+      Logger.info("streams started")
+      res = Enum.map(res, fn {:ok, assoc} -> assoc end)
+      Logger.info("done running async")
+      res
+    else
+      Logger.info("running sync")
+      res = Enum.map(assocs, &fun.(&1, opts))
+      Logger.info("done running sync")
+      res
+    end
+  end
