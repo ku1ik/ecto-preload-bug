@@ -23,7 +23,8 @@ defmodule PreloadBug.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0"}
+      {:postgrex, ">= 0.0.0"},
+      {:exprof, "~> 0.2.0"}
     ]
   end
 end

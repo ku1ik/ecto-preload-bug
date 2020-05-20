@@ -40,12 +40,15 @@ defmodule PreloadBug do
   def twice_not_in_parallel do
     cleanup()
     invoice = setup()
-    Repo.preload(Repo.preload(invoice, @preloads), @preloads, in_parallel: false)
+
+    invoice
+    |> Repo.preload(@preloads)
+    |> Repo.preload(@preloads, in_parallel: false)
 
     :ok
   end
 
-  defp setup do
+  def setup do
     vendor = Repo.insert!(%Vendor{name: "test", company_id: 1})
     invoice = Repo.insert!(%Invoice{number: "test", vendor_id: vendor.id})
     attachment = Repo.insert!(%Attachment{filename: "test.pdf"})
@@ -57,7 +60,7 @@ defmodule PreloadBug do
     invoice
   end
 
-  defp cleanup do
+  def cleanup do
     Repo.delete_all(Page)
     Repo.delete_all(Attachment)
     Repo.delete_all(Invoice)
